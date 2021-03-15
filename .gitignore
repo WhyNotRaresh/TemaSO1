@@ -1,1 +1,7 @@
-checker*
+_test
+hooks.*
+libso.so
+run*
+README
+Makefile.checker
+so-cpp
