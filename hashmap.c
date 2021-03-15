@@ -6,11 +6,11 @@
 
 A_Item allocItem(char* key, char* data) {
 	A_Item item = (A_Item) malloc (sizeof(Item));
-	item->key = malloc(strlen(key));
-	item->data = malloc(strlen(data));
+	item->key = (char*) calloc(strlen(key) + 1, 1);
+	item->data = (char*) calloc(strlen(data) + 1, 1);
 
-	strcpy(item->key, key);
-	strcpy(item->data, data);
+	strncpy(item->key, key, strlen(key));
+	strncpy(item->data, data, strlen(data));
 	return item;
 }
 
@@ -43,7 +43,8 @@ A_Item search(const char* key) {
 	int index = hash(key);
 
 	while (mapping[index] != NULL) {
-		if (strcmp(mapping[index]->key, key) == 0)
+		if (strncmp(mapping[index]->key, key, strlen(key)) == 0 &&
+			strlen(mapping[index]->key) == strlen(key))
 			return mapping[index];
 		index = ++index % hashmap_size;
 	}
@@ -62,6 +63,21 @@ void insert(char* key, char* data) {
 	}
 
 	mapping[index] = item;
+}
+
+char** getKeyList() {
+	int i = 0, j = 0;
+	char** keys = (char**) calloc (hashmap_size + 1, sizeof(char*));
+
+	for (; i < hashmap_size; i++) {
+		if (mapping[i] != NULL) {
+			keys[j] = malloc(strlen(mapping[i]->key));
+			strcpy(keys[j], mapping[i]->key);
+			j++;
+		}
+	}
+
+	return keys;
 }
 
 int hash(const char* str) {
