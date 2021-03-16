@@ -3,6 +3,7 @@
 #include "str_aux.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define DEF 	"#define"
 #define UNDEF 	"#undef"
@@ -11,8 +12,8 @@ HashMap def_mappings;
 
 int mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
 void process(FILE*, FILE*);							// process input file
-char* addNewLineToOutput(char*);					// computes new line for output
-void checkDataForDefines(char*);					// checks for nested defines
+char* computeLine(char*);							// computes new line for output
+char* multiLineDefine(FILE*, char*);
 
 int main(int argc, char* argv[]) {
 	def_mappings = allocHM();
@@ -109,11 +110,10 @@ void process(FILE* in, FILE* out) {
 
 			statement += 8;
 			char* key = strtok(statement, " ");
-			char* data = strtok(NULL, "\n");
-
-			checkDataForDefines(data);
+			char* data = computeLine(strtok(NULL, "\n"));
 
 			insert(key, data, def_mappings);
+			free(data);
 		} else if((statement = strstr(line, UNDEF)) != 0) {
 
 			/* #undef statement found */
@@ -125,7 +125,7 @@ void process(FILE* in, FILE* out) {
 
 			/* No macro */
 
-			char* out_line = addNewLineToOutput(line);
+			char* out_line = computeLine(line);
 			fprintf(out, "%s", out_line);
 			free(out_line);
 		}
@@ -134,7 +134,7 @@ void process(FILE* in, FILE* out) {
 	free(line);
 }
 
-char* addNewLineToOutput(char* line) {
+char* computeLine(char* line) {
 	int inQuotes = 0, inApostrophe = 0;
 	char quotes = '\"', apostrophe = '\'';
 	int word_start = -1;
@@ -164,16 +164,21 @@ char* addNewLineToOutput(char* line) {
 
 			/* if outside of quotes, work on text */
 
-			if (word_start == -1 && canBeName(line[i]) == 1) {
+			if (word_start == -1 && isalpha(line[i])) {
+				/* New word */
 				word_start = i;
 			}
 
 			if (word_start == -1){
+				/* Outside of any word */
 				*(new_line_ptr++) = line[i];
 				continue;
 			}
 
 			if (word_start != -1 && canBeName(line[i]) == -1) {
+
+				/* End of word */
+
 				int word_len = i - word_start;
 				char* word = (char*) calloc (word_len + 1, sizeof(char));
 				strncpy(word, line + word_start, word_len);
@@ -199,9 +204,9 @@ char* addNewLineToOutput(char* line) {
 		}
 	}
 
+	if (word_start != -1) {
+		strncpy(new_line_ptr, line + word_start, 1);
+	}
+
 	return new_line;
-}
-
-void checkDataForDefines(char* data) {
-
 }
