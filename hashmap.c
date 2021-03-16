@@ -22,57 +22,71 @@ void deallocItem(A_Item item) {
 
 ////////////// HASHMAP ALLOCATION //////////////
 
-HashMap allocHM(int maxSize) {
-	hashmap_size = maxSize;
-	mapping = (HashMap) calloc (maxSize, sizeof(A_Item));
-	return mapping;
+HashMap allocHM() {
+	HashMap map = (HashMap) calloc (HASHMAP_SIZE, sizeof(A_Item));
+	return map;
 }
 
-void deallocHM() {
+void deallocHM(HashMap map) {
 	int i = 0;
-	for ( ; i < hashmap_size; i++) {
-		if (mapping[i] != NULL)
-			deallocItem(mapping[i]);
+	for ( ; i < HASHMAP_SIZE; i++) {
+		if (map[i] != NULL)
+			deallocItem(map[i]);
 	}
-	free (mapping);
+	free (map);
 }
 
 ////////////// HASHMAP FUNCTIONS //////////////
 
-A_Item search(const char* key) {
+A_Item search(const char* key, HashMap map) {
 	int index = hash(key);
 
-	while (mapping[index] != NULL) {
-		if (strncmp(mapping[index]->key, key, strlen(key)) == 0 &&
-			strlen(mapping[index]->key) == strlen(key))
-			return mapping[index];
-		index = ++index % hashmap_size;
+	while (map[index] != NULL) {
+		if (strncmp(map[index]->key, key, strlen(key)) == 0 &&
+			strlen(map[index]->key) == strlen(key))
+			return map[index];
+		index = ++index % HASHMAP_SIZE;
 	}
 
 	return NULL;
 }
 
-void insert(char* key, char* data) {
+void insert(char* key, char* data, HashMap map) {
 	A_Item item = allocItem(key, data);
 	if (item == NULL) return;
 
 	int index = hash(key);
 
-	while (mapping[index] != NULL) {
-		index = ++index % hashmap_size;
+	while (map[index] != NULL) {
+		index = ++index % HASHMAP_SIZE;
 	}
 
-	mapping[index] = item;
+	map[index] = item;
 }
 
-char** getKeyList() {
-	int i = 0, j = 0;
-	char** keys = (char**) calloc (hashmap_size + 1, sizeof(char*));
+void erase(char* key, HashMap map) {
+	int index = hash(key);
 
-	for (; i < hashmap_size; i++) {
-		if (mapping[i] != NULL) {
-			keys[j] = malloc(strlen(mapping[i]->key));
-			strcpy(keys[j], mapping[i]->key);
+	while (map[index] != NULL) {
+		if (strncmp(map[index]->key, key, strlen(key)) == 0 &&
+				strlen(map[index]->key) == strlen(key)){
+			deallocItem(map[index]);
+			map[index] = NULL;
+			break;
+		}
+			
+		index = ++index % HASHMAP_SIZE;
+	}
+}
+
+char** getKeyList(HashMap map) {
+	int i = 0, j = 0;
+	char** keys = (char**) calloc (HASHMAP_SIZE + 1, sizeof(char*));
+
+	for (; i < HASHMAP_SIZE; i++) {
+		if (map[i] != NULL) {
+			keys[j] = malloc(strlen(map[i]->key));
+			strcpy(keys[j], map[i]->key);
 			j++;
 		}
 	}
@@ -88,5 +102,5 @@ int hash(const char* str) {
 		hash = ((hash << 5) + hash) + c; /* hash * 33  + c */
 	}
 
-	return hash % hashmap_size;
+	return hash % HASHMAP_SIZE;
 }

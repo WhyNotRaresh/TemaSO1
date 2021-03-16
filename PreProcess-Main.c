@@ -1,34 +1,37 @@
 #include "hashmap.h"
+#include "array.h"
+#include "str_aux.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-
-#define MAXDEF 100
 
 #define DEF 	"#define"
 #define UNDEF 	"#undef"
 
-void mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
-void process(FILE*, FILE*);							// process input file
+HashMap def_mappings;
 
-void addNewLineToOutput(FILE*, char*);
+int mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
+void process(FILE*, FILE*);							// process input file
+char* addNewLineToOutput(char*);					// computes new line for output
+void checkDataForDefines(char*);					// checks for nested defines
 
 int main(int argc, char* argv[]) {
-	allocHM(MAXDEF);
+	def_mappings = allocHM();
 	FILE *in = NULL, *out = NULL;
 
-	mapAllArgs(&in, &out, argc, argv);
-	if (out == NULL) out = stdout;
+	if (mapAllArgs(&in, &out, argc, argv) != -1) {
+		if (out == NULL) out = stdout;
 
-	process(in, out);
+		process(in, out);
+	}
+	
 
 	if (in != NULL)	fclose(in);
 	if (out != NULL) fclose(out);
-	deallocHM();
+	deallocHM(def_mappings);
 	return 0;
 }
 
-void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
+int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 	int i = 1;
 	for (; i < argc; i++) {
 
@@ -38,10 +41,10 @@ void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 			if (++i < argc) {
 				char* key = strtok(argv[i], "=");
 				char* data = strtok(NULL, "");
-				insert(key, data);
+				insert(key, data, def_mappings);
 				continue;
 			} else {
-				return;
+				return -1;
 			}
 		}
 
@@ -49,7 +52,7 @@ void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 			if (++i < argc) {
 				continue;
 			} else {
-				return;
+				return -1;
 			}
 		}
 
@@ -58,7 +61,7 @@ void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 				*out = fopen(argv[i], "w");
 				continue;
 			} else {
-				return;
+				return -1;
 			}
 		}
 
@@ -71,7 +74,7 @@ void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 		if (strcmp(beginning, "-D") == 0) {
 			char* key = strtok(new_arg, "=");
 			char* data = strtok(NULL, "");
-			insert(key, data);
+			insert(key, data, def_mappings);
 			continue;
 		}
 
@@ -88,6 +91,8 @@ void mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 
 		*in = fopen(argv[i], "r");
 	}
+
+	return 0;
 }
 
 void process(FILE* in, FILE* out) {
@@ -99,68 +104,104 @@ void process(FILE* in, FILE* out) {
 		char* statement;
 
 		if ((statement = strstr(line, DEF)) != 0) {
+
+			/* #define statement found */
+
 			statement += 8;
 			char* key = strtok(statement, " ");
 			char* data = strtok(NULL, "\n");
-			insert(key, data);
+
+			checkDataForDefines(data);
+
+			insert(key, data, def_mappings);
 		} else if((statement = strstr(line, UNDEF)) != 0) {
-			
-		}
-		else {
-			addNewLineToOutput(out, line);
+
+			/* #undef statement found */
+
+			statement += 7;
+			char* key = strtok(statement, "\n");
+			erase(key, def_mappings);
+		} else {
+
+			/* No macro */
+
+			char* out_line = addNewLineToOutput(line);
+			fprintf(out, "%s", out_line);
+			free(out_line);
 		}
 	}
 
 	free(line);
 }
 
-void addNewLineToOutput(FILE* out, char* line) {
+char* addNewLineToOutput(char* line) {
 	int inQuotes = 0, inApostrophe = 0;
 	char quotes = '\"', apostrophe = '\'';
 	int word_start = -1;
 
+	char* new_line = (char*) calloc (strlen(line) * 2, 1);
+	char* new_line_ptr = new_line;
+
 	int i = 0;
 	for (; i < strlen(line); i++) {
 		if (line[i] == quotes) {
-			fprintf(out, "%c", line[i]);
+			*(new_line_ptr++) = line[i];
 			inQuotes++;
 			continue;
 		}
 		if (line[i] == apostrophe) {
-			fprintf(out, "%c", line[i]);
+			*(new_line_ptr++) = line[i];
 			inApostrophe++;
 			continue;
 		}
 
 		if (inQuotes % 2 == 1 || inApostrophe % 2 == 1){
+
 			/* if in quotes/apostrope just print character */
-			fprintf(out, "%c", line[i]);
+
+			*(new_line_ptr++) = line[i];
 		} else {
+
 			/* if outside of quotes, work on text */
-			if (word_start == -1 && isalpha(line[i])) {
+
+			if (word_start == -1 && canBeName(line[i]) == 1) {
 				word_start = i;
 			}
 
 			if (word_start == -1){
-				fprintf(out, "%c", line[i]);
+				*(new_line_ptr++) = line[i];
 				continue;
 			}
 
-			if (word_start != -1 && !isalpha(line[i])) {
-				int word_len = i - word_start + 1;
-				char* key_toSearch = (char*) calloc (word_len + 1, sizeof(char));
-				strncpy(key_toSearch, line + word_start, word_len);
+			if (word_start != -1 && canBeName(line[i]) == -1) {
+				int word_len = i - word_start;
+				char* word = (char*) calloc (word_len + 1, sizeof(char));
+				strncpy(word, line + word_start, word_len);
 
-				A_Item it = search(key_toSearch);
-				if (it == NULL) {
-					fprintf(out, "%s", key_toSearch);
+				/* Searching Define map */
+
+				A_Item it = search(word, def_mappings);
+				if (it != NULL) {
+					strncpy(new_line_ptr, it->data, strlen(it->data));
+					new_line_ptr += strlen(it->data);
 				} else {
-					fprintf(out, "%s", it->data);
-				}
 
-				free(key_toSearch);
-				word_start = -1;	
+					/* Just printing normal word */
+
+					strncpy(new_line_ptr, word, strlen(word));
+					new_line_ptr += strlen(word);
+				}
+				*(new_line_ptr++) = line[i];
+				
+				free(word);
+				word_start = -1;
 			}
 		}
 	}
+
+	return new_line;
+}
+
+void checkDataForDefines(char* data) {
+
 }
