@@ -145,41 +145,42 @@ char* computeString(char* line) {
 	char quotes = '\"', apostrophe = '\'';
 	int word_start = -1;
 
-	int new_line_len = strlen(line);
-	char* new_line = (char*) calloc (new_line_len * 5, 1);
-	char* new_line_ptr = new_line;
+	int new_line_len = strlen(line);							// alloc'd size of new line
+	char* new_line = (char*) calloc (new_line_len + 1, 1);		// computet string of input
+	char* new_line_ptr = new_line;								// pointer to last unwritten chr in new line
 
 	int i = 0;
 	for (; i < strlen(line); i++) {
 
-		/* Reallocing new line */
-
-		/*int new_line_index = new_line_ptr - new_line;
+		// checking if we would write outside of alloc'd memory
+		int new_line_index = new_line_ptr - new_line;
 		if (new_line_index >= new_line_len - 1) {
+
+			/* Reallocing new line */
+
 			new_line_len *= 2;
 			new_line = realloc(new_line, new_line_len);
 			new_line_ptr = new_line + new_line_index;
-		}*/
+		}
+
+		/* Checking of quotes and apostrophes */
 
 		if (line[i] == quotes) {
 			*(new_line_ptr++) = line[i];
-			new_line_len++;
 			inQuotes++;
 			continue;
 		}
 		if (line[i] == apostrophe) {
 			*(new_line_ptr++) = line[i];
-			new_line_len++;
 			inApostrophe++;
 			continue;
 		}
 
 		if (inQuotes % 2 == 1 || inApostrophe % 2 == 1){
 
-			/* if in quotes/apostrope just print character */
+			/* if in quotes/apostrophes just print character */
 
 			*(new_line_ptr++) = line[i];
-			new_line_len++;
 		} else {
 
 			/* if outside of quotes, work on text */
@@ -192,7 +193,6 @@ char* computeString(char* line) {
 			if (word_start == -1){
 				/* Outside of any word */
 				*(new_line_ptr++) = line[i];
-				new_line_len++;
 				continue;
 			}
 
@@ -208,17 +208,22 @@ char* computeString(char* line) {
 
 				A_Item it = search(word, def_mappings);
 				if (it != NULL) {
+					int data_len = strlen(it->data);
 
-					/*int new_line_index = new_line_ptr - new_line + strlen(it->data);
-					if (new_line_index >= new_line_len - 1) {
-						new_line_len += strlen(it->data) * 2;
+					int new_line_index = new_line_ptr - new_line;
+					// checking if we would write outside of alloc'd memory
+					if (new_line_index + data_len >= new_line_len - 1) {
+
+						/* Reallocing new line */
+
+						new_line_len += data_len + 2;
 						new_line = realloc(new_line, new_line_len);
-						new_line_ptr = new_line + new_line_index - strlen(it->data);
-					}*/
+						new_line_ptr = new_line + new_line_index;
+					}
 
 
-					strncpy(new_line_ptr, it->data, strlen(it->data));
-					new_line_ptr += strlen(it->data);
+					strncpy(new_line_ptr, it->data, data_len);
+					new_line_ptr += data_len;
 				} else {
 
 					/* Just printing normal word */
@@ -235,10 +240,16 @@ char* computeString(char* line) {
 	}
 
 	if (word_start != -1) {
-		*new_line_ptr = *(line + word_start);
+		*(new_line_ptr++) = *(line + word_start);
 	}
 
-	return new_line;
+	/* Truncating result to exact size */
+
+	char* result = (char*) calloc (new_line_ptr - new_line + 1, 1);
+	strncpy(result, new_line, new_line_ptr - new_line);
+	free(new_line);
+
+	return result;
 }
 
 char* multiLineDefine(FILE* in, char* data, int def_len) {
