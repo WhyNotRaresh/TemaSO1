@@ -12,16 +12,19 @@ HashMap def_mappings;
 
 int mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
 void process(FILE*, FILE*);							// process input file
-char* computeLine(char*);							// computes new line for output
-char* multiLineDefine(FILE*, char*);
+char* computeString(char*);							// computes new line for output
+char* multiLineDefine(FILE*, char*, int);
 
 int main(int argc, char* argv[]) {
 	def_mappings = allocHM();
 	FILE *in = NULL, *out = NULL;
 
 	if (mapAllArgs(&in, &out, argc, argv) != -1) {
+		if (in == NULL) {
+			deallocHM(def_mappings);
+			return -1;
+		}
 		if (out == NULL) out = stdout;
-
 		process(in, out);
 	}
 	
@@ -102,7 +105,7 @@ void process(FILE* in, FILE* out) {
 	size_t len = 0;
 
 	while ((read = getline(&line, &len, in)) != -1) {
-		char* statement;
+		char* statement = NULL;
 
 		if ((statement = strstr(line, DEF)) != 0) {
 
@@ -110,10 +113,13 @@ void process(FILE* in, FILE* out) {
 
 			statement += 8;
 			char* key = strtok(statement, " ");
-			char* data = computeLine(strtok(NULL, "\n"));
+			char* data = strtok(NULL, "\n");					// remaining text in line
+			data = multiLineDefine(in, data, strlen(data));		// checks for defines on multiple lines
+			char* definition = computeString(data);				// replaces strings already defined in hashmap
 
-			insert(key, data, def_mappings);
+			insert(key, definition, def_mappings);
 			free(data);
+			free(definition);
 		} else if((statement = strstr(line, UNDEF)) != 0) {
 
 			/* #undef statement found */
@@ -125,7 +131,7 @@ void process(FILE* in, FILE* out) {
 
 			/* No macro */
 
-			char* out_line = computeLine(line);
+			char* out_line = computeString(line);
 			fprintf(out, "%s", out_line);
 			free(out_line);
 		}
@@ -134,23 +140,36 @@ void process(FILE* in, FILE* out) {
 	free(line);
 }
 
-char* computeLine(char* line) {
+char* computeString(char* line) {
 	int inQuotes = 0, inApostrophe = 0;
 	char quotes = '\"', apostrophe = '\'';
 	int word_start = -1;
 
-	char* new_line = (char*) calloc (strlen(line) * 2, 1);
+	int new_line_len = strlen(line);
+	char* new_line = (char*) calloc (new_line_len * 5, 1);
 	char* new_line_ptr = new_line;
 
 	int i = 0;
 	for (; i < strlen(line); i++) {
+
+		/* Reallocing new line */
+
+		/*int new_line_index = new_line_ptr - new_line;
+		if (new_line_index >= new_line_len - 1) {
+			new_line_len *= 2;
+			new_line = realloc(new_line, new_line_len);
+			new_line_ptr = new_line + new_line_index;
+		}*/
+
 		if (line[i] == quotes) {
 			*(new_line_ptr++) = line[i];
+			new_line_len++;
 			inQuotes++;
 			continue;
 		}
 		if (line[i] == apostrophe) {
 			*(new_line_ptr++) = line[i];
+			new_line_len++;
 			inApostrophe++;
 			continue;
 		}
@@ -160,6 +179,7 @@ char* computeLine(char* line) {
 			/* if in quotes/apostrope just print character */
 
 			*(new_line_ptr++) = line[i];
+			new_line_len++;
 		} else {
 
 			/* if outside of quotes, work on text */
@@ -172,6 +192,7 @@ char* computeLine(char* line) {
 			if (word_start == -1){
 				/* Outside of any word */
 				*(new_line_ptr++) = line[i];
+				new_line_len++;
 				continue;
 			}
 
@@ -180,13 +201,22 @@ char* computeLine(char* line) {
 				/* End of word */
 
 				int word_len = i - word_start;
-				char* word = (char*) calloc (word_len + 1, sizeof(char));
+				char* word = (char*) calloc (word_len + 1, 1);
 				strncpy(word, line + word_start, word_len);
 
 				/* Searching Define map */
 
 				A_Item it = search(word, def_mappings);
 				if (it != NULL) {
+
+					/*int new_line_index = new_line_ptr - new_line + strlen(it->data);
+					if (new_line_index >= new_line_len - 1) {
+						new_line_len += strlen(it->data) * 2;
+						new_line = realloc(new_line, new_line_len);
+						new_line_ptr = new_line + new_line_index - strlen(it->data);
+					}*/
+
+
 					strncpy(new_line_ptr, it->data, strlen(it->data));
 					new_line_ptr += strlen(it->data);
 				} else {
@@ -205,8 +235,53 @@ char* computeLine(char* line) {
 	}
 
 	if (word_start != -1) {
-		strncpy(new_line_ptr, line + word_start, 1);
+		*new_line_ptr = *(line + word_start);
 	}
 
 	return new_line;
+}
+
+char* multiLineDefine(FILE* in, char* data, int def_len) {
+	char* definition = (char*) calloc (def_len + 1, 1);
+	strncpy(definition, data, def_len);
+
+	if (data[strlen(data) - 1] == '\\') {
+
+		/* Multi Line Define */
+
+		char* new_line = NULL;
+		size_t line_len = 0;
+		size_t read = 0;
+
+		while ((read = getline(&new_line, &line_len, in)) != -1) {
+			char* token = strtok(new_line, "\n");
+			char* new_def = (char*) calloc(def_len + strlen(token) + 1, 1);
+
+			strncpy(new_def, definition, def_len);
+			strncpy(new_def + def_len, token, strlen(token));
+			def_len = strlen(new_def);
+
+			free(definition);
+			definition = new_def;
+
+			char* backslash = NULL;
+			if ((backslash = strstr(new_line, "\\")) == 0) {
+				break;
+			}
+		}
+
+		free(new_line);
+		
+		int i = 0;
+		for (; i < def_len; i++) {
+			if (definition[i] == '\t' ||
+				definition[i] == '\\')
+				definition[i] = ' ';
+		}
+	}
+
+	definition = realloc(definition, def_len + 1);
+	definition[def_len] = '\0';
+
+	return definition;
 }
