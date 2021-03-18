@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <unistd.h>
 
 int print;
 
@@ -41,8 +40,10 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 
 		if (strcmp(argv[i], "-D") == 0) {
 			if (++i < argc) {
+				char* data = strstr(argv[i], "=");
+				if (data == 0) data = "";
+				else 		   data += 1;
 				char* key = strtok(argv[i], "=");
-				char* data = strtok(NULL, "");
 				insert(key, data, def_mappings);
 				continue;
 			} else {
@@ -74,8 +75,10 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 		char* new_arg = argv[i] + 2;
 
 		if (strcmp(beginning, "-D") == 0) {
+			char* data = strstr(argv[i], "=");
+			if (data == 0) data = "";
+			else 		   data += 1;
 			char* key = strtok(new_arg, "=");
-			char* data = strtok(NULL, "");
 			insert(key, data, def_mappings);
 			continue;
 		}
@@ -157,6 +160,27 @@ void process(FILE* in, FILE* out) {
 				statement += 7;
 				char* key = strtok(statement, "\n");
 				erase(key, def_mappings);
+			} else if((statement = strstr(work_string, IFDEF)) != 0){
+
+				/* #ifdef statement found */
+
+				statement += 7;
+
+				char* key = strtok(statement, "\n");
+				A_Item it = search(key, def_mappings);
+
+				if (it == NULL) print = 0;
+			} else if((statement = strstr(work_string, IFNDEF)) != 0){
+
+				/* #ifndef statement found */
+
+				statement += 8;
+
+				char* key = strtok(statement, "\n");
+				A_Item it = search(key, def_mappings);
+
+				if (it == NULL) print = 1;
+				else  			print = 0;
 			} else if ((statement = strstr(work_string, IF)) != 0) {
 
 				/* #if statement found */

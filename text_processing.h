@@ -8,6 +8,8 @@
 #define DEF 	"#define"
 #define UNDEF 	"#undef"
 #define IF 		"#if"
+#define IFDEF	"#ifdef"
+#define IFNDEF	"#ifndef"
 #define ELSE	"#else"
 #define ELIF	"#elif"
 #define ENDIF	"#endif"
