@@ -5,11 +5,11 @@ RESULT = "so-cpp"
 MAIN_FILE = "PreProcess-Main.c"
 HASHMAP_FILE = "hashmap.c"
 ARRAY_FILE = "array.c"
-STR_AUX_FILE = "str_aux.c"
+STR_AUX_FILE = "text_processing.c"
 
 default: so-main clean_obj
 
-so-main: hashmap.o array.o str_aux.o main.o
+so-main: hashmap.o array.o text_processing.o main.o
 	$(CC) $(CFLAGS) -o $(RESULT) $^
 
 main.o:
@@ -21,7 +21,7 @@ hashmap.o:
 array.o:
 	$(CC) -c $(ARRAY_FILE)
 
-str_aux.o:
+text_processing.o:
 	$(CC) -c $(STR_AUX_FILE)
 
 clean_obj:
