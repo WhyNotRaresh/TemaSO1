@@ -11,45 +11,50 @@ int canBeName(const char c) {
 	return ret;
 }
 
+int isNumber(const char* str) {
+	int i = 0;
+	for (; i < strlen(str); i++) {
+		if (str[i] < '0' || str[i] > '9')
+			return -1;
+	}
+	return 1;
+}
+
 char* computeString(char* line) {
-	int inQuotes = 0, inApostrophe = 0;
-	char quotes = '\"', apostrophe = '\'';
+	int inApostrophe = 0;
+	char apostrophe = '\'';
 	int word_start = -1;
+	int line_len = strlen(line);
 
 	int new_line_len = strlen(line);							// alloc'd size of new line
 	char* new_line = (char*) calloc (new_line_len + 1, 1);		// computet string of input
 	char* new_line_ptr = new_line;								// pointer to last unwritten chr in new line
 
 	int i = 0;
-	for (; i < strlen(line); i++) {
+	for (; i <= line_len; i++) {
 
 		// checking if we would write outside of alloc'd memory
 		int new_line_index = new_line_ptr - new_line;
 		if (new_line_index >= new_line_len - 1) {
 
-			/* Reallocing new line */
+			/* Realloc'ing new line */
 
 			new_line_len *= 2;
 			new_line = realloc(new_line, new_line_len);
 			new_line_ptr = new_line + new_line_index;
 		}
 
-		/* Checking of quotes and apostrophes */
+		/* Checking apostrophes */
 
-		if (line[i] == quotes) {
-			*(new_line_ptr++) = line[i];
-			inQuotes++;
-			continue;
-		}
 		if (line[i] == apostrophe) {
 			*(new_line_ptr++) = line[i];
 			inApostrophe++;
 			continue;
 		}
 
-		if (inQuotes % 2 == 1 || inApostrophe % 2 == 1){
+		if (inApostrophe % 2 == 1){
 
-			/* if in quotes/apostrophes just print character */
+			/* if in quotes/apostrophes just add chr to new line character */
 
 			*(new_line_ptr++) = line[i];
 		} else {
@@ -67,7 +72,7 @@ char* computeString(char* line) {
 				continue;
 			}
 
-			if (word_start != -1 && canBeName(line[i]) == -1) {
+			if (i == line_len || (word_start != -1 && canBeName(line[i]) == -1)) {
 
 				/* End of word */
 
@@ -85,7 +90,7 @@ char* computeString(char* line) {
 					// checking if we would write outside of alloc'd memory
 					if (new_line_index + data_len >= new_line_len - 1) {
 
-						/* Reallocing new line */
+						/* Realloc'ing new line */
 
 						new_line_len += data_len + 2;
 						new_line = realloc(new_line, new_line_len);
@@ -110,10 +115,6 @@ char* computeString(char* line) {
 		}
 	}
 
-	if (word_start != -1) {
-		*(new_line_ptr++) = *(line + word_start);
-	}
-
 	/* Truncating result to exact size */
 
 	char* result = (char*) calloc (new_line_ptr - new_line + 1, 1);
@@ -136,7 +137,10 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 		size_t read = 0;
 
 		while ((read = getline(&new_line, &line_len, in)) != -1) {
-			char* token = strtok(new_line, "\n");
+			char* token = strtok(new_line, "\n");	// newt line of the definition
+
+			/* Alloc'ing new space for new definiton */
+
 			char* new_def = (char*) calloc(def_len + strlen(token) + 1, 1);
 
 			strncpy(new_def, definition, def_len);
@@ -146,6 +150,7 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 			free(definition);
 			definition = new_def;
 
+			// Exit condition
 			char* backslash = NULL;
 			if ((backslash = strstr(new_line, "\\")) == 0) {
 				break;
@@ -153,6 +158,8 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 		}
 
 		free(new_line);
+
+		/* Replacing specific chrs from definition */
 		
 		int i = 0;
 		for (; i < def_len; i++) {

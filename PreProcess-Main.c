@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
+
+int print;
 
 int mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
 void process(FILE*, FILE*);							// process input file
@@ -18,6 +21,8 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 		if (out == NULL) out = stdout;
+
+		print = 1;
 		process(in, out);
 	}
 	
@@ -98,36 +103,115 @@ void process(FILE* in, FILE* out) {
 	size_t len = 0;
 
 	while ((read = getline(&line, &len, in)) != -1) {
-		char* statement = NULL;
+		int quotes = -1;
+		char* quotes_ptr = line;
 
-		if ((statement = strstr(line, DEF)) != 0) {
+		do {
+			char* work_string = NULL;						// string to pe processed
+			quotes++;										// number of quotes found in line increased
+			char* next_quotes = strstr(quotes_ptr, "\"");	// getting next quote in line
 
-			/* #define statement found */
+			if (next_quotes != 0) {
+				work_string = (char*) calloc(next_quotes - quotes_ptr + 2, 1);
+				strncpy(work_string, quotes_ptr, next_quotes - quotes_ptr + 1);
+				quotes_ptr = next_quotes + 1;
+			} else {
+				work_string = (char*) calloc(strlen(line) + line - quotes_ptr + 1, 1);
+				strncpy(work_string, quotes_ptr, strlen(line) + line - quotes_ptr);
+				quotes_ptr = NULL;
+			}
 
-			statement += 8;
-			char* key = strtok(statement, " ");
-			char* data = strtok(NULL, "\n");					// remaining text in line
-			data = multiLineDefine(in, data, strlen(data));		// checks for defines on multiple lines
-			char* definition = computeString(data);				// replaces strings already defined in hashmap
+			if (quotes % 2 == 1) {
 
-			insert(key, definition, def_mappings);
-			free(data);
-			free(definition);
-		} else if((statement = strstr(line, UNDEF)) != 0) {
+				/* Working inside Quotes => just print line */
 
-			/* #undef statement found */
+				if (print == 1) {
+					fprintf(out, "%s", work_string);
+				}
+				free(work_string);
+				continue;
+			}
 
-			statement += 7;
-			char* key = strtok(statement, "\n");
-			erase(key, def_mappings);
-		} else {
+			/* Working outside of quotes => process sting */
 
-			/* No macro */
+			char* statement = NULL;
+			if ((statement = strstr(work_string, DEF)) != 0) {
 
-			char* out_line = computeString(line);
-			fprintf(out, "%s", out_line);
-			free(out_line);
-		}
+				/* #define statement found */
+
+				statement = line + 8;
+				char* key = strtok(statement, " ");
+				char* data = strtok(NULL, "\n");					// remaining text in line
+				data = multiLineDefine(in, data, strlen(data));		// checks for defines on multiple lines
+				char* definition = computeString(data);				// replaces strings already defined in hashmap
+
+				insert(key, definition, def_mappings);
+				free(data);
+				free(definition);
+
+				quotes_ptr = NULL;
+			} else if((statement = strstr(work_string, UNDEF)) != 0) {
+
+				/* #undef statement found */
+
+				statement += 7;
+				char* key = strtok(statement, "\n");
+				erase(key, def_mappings);
+			} else if ((statement = strstr(work_string, IF)) != 0) {
+
+				/* #if statement found */
+
+				statement += 4;
+				char* condition = computeString(strtok(statement, "\n"));
+				int eval_cond;
+				if (isNumber(condition) != -1) eval_cond = atoi(condition);
+				else 						   print = -1;
+
+				free(condition);
+
+				if (eval_cond != 0 && print == 0) print = 1; 
+				if (eval_cond == 0 && print == 1) print = 0;
+			} else if((statement = strstr(work_string, ELSE)) != 0) {
+
+				/* #else statement found */
+
+				if (print == 0) print = 1;
+				else if (print == 1) print = 0;
+			} else if((statement = strstr(work_string, ELIF)) != 0) {
+
+				/* #elif statement found */
+
+				if (print == 0) {
+					statement += 6;
+					char* condition = computeString(strtok(statement, "\n"));
+					int eval_cond;
+
+					if (isNumber(condition) != -1) eval_cond = atoi(condition);
+					else 						   print = -1;
+
+					free(condition);
+
+					if (eval_cond != 0 && print == 0) print = 1; 
+					if (eval_cond == 0 && print == 1) print = 0;
+				}
+			}else if((statement = strstr(work_string, ENDIF)) != 0) {
+
+				/* #endif statement found */
+
+				print = 1;
+			} else {
+
+				/* No macro */
+
+				if (print == 1) {
+					char* out_line = computeString(work_string);
+					fprintf(out, "%s", out_line);
+					free(out_line);
+				}
+			}
+
+			free(work_string);
+		} while(quotes_ptr != NULL);
 	}
 
 	free(line);
