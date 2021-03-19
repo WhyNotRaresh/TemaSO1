@@ -12,7 +12,7 @@ void process(FILE*, FILE*);							// process input file
 
 int main(int argc, char* argv[]) {
 	def_mappings = allocHM();
-	dir_array	 = allocArray(100);
+	dir_array	 = allocArray(10);
 	add("./_test/inputs/", &dir_array);
 	FILE *in = NULL, *out = NULL;
 

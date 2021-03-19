@@ -1,7 +1,7 @@
 #pragma once
 #include <string.h>
 
-#define HASHMAP_SIZE 100
+#define HASHMAP_SIZE 10
 
 /* HashMap Item */
 typedef struct {
