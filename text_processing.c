@@ -18,6 +18,22 @@ char* formatDirName(const char* input_arg) {
 	return path;
 }
 
+char* formatDefine(const char* input_arg) {
+	char* definition = NULL;
+	int input_len = strlen(input_arg);
+
+	if (isNumber(input_arg) == 1) {
+		definition = calloc(input_len + 1, 1);
+		strncpy(definition, input_arg, input_len);
+	} else {
+		definition = calloc(input_len + 3, 1);
+		definition[0] = '\"'; definition[input_len + 1] = '\"';
+		strncpy(definition + 1, input_arg, input_len);
+	}
+
+	return definition;
+}
+
 int canBeName(const char c) {
 	int ret = -1;
 	if (isalpha(c)) ret = 1;

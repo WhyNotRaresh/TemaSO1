@@ -6,5 +6,6 @@ Makefile.checker
 so-cpp
 *test*
 _*
+*log*
 *in
 *out

@@ -47,7 +47,9 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 				if (data == 0) data = "";
 				else 		   data += 1;
 				char* key = strtok(argv[i], "=");
-				insert(key, data, def_mappings);
+				char* definition = formatDefine(data);
+				insert(key, definition, def_mappings);
+				free(definition);
 				continue;
 			} else {
 				return -1;
@@ -85,7 +87,9 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 			if (data == 0) data = "";
 			else 		   data += 1;
 			char* key = strtok(new_arg, "=");
-			insert(key, data, def_mappings);
+			char* definition = formatDefine(data);
+			insert(key, definition, def_mappings);
+			free(definition);
 			continue;
 		}
 
@@ -154,11 +158,18 @@ void process(FILE* in, FILE* out) {
 				statement = strstr(line, DEF) + 8;
 				char* key = strtok(statement, " ");
 				char* data = strtok(NULL, "\n");					// remaining text in line
-				data = multiLineDefine(in, data, strlen(data));		// checks for defines on multiple lines
-				char* definition = computeString(data);				// replaces strings already defined in hashmap
+				char* definition;
+
+				if (data != NULL) {
+					data = multiLineDefine(in, data, strlen(data));	// checks for defines on multiple lines
+					definition = computeString(data);				// replaces strings already defined in hashmap
+					free(data);
+				} else {
+					definition = calloc(2, 1);
+					definition[0] = ' ';							// dummy definition for key
+				}
 
 				insert(key, definition, def_mappings);
-				free(data);
 				free(definition);
 
 				quotes_ptr = NULL;

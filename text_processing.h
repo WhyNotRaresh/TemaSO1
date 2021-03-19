@@ -20,6 +20,7 @@ HashMap def_mappings;
 Array 	dir_array;
 
 char* formatDirName(const char*);
+char* formatDefine(const char*);
 int canBeName(const char);							// checks if c can be part of variable name
 int isNumber(const char*);
 char* computeString(char*);							// computes new line for output
