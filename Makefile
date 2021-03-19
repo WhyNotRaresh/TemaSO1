@@ -7,7 +7,9 @@ HASHMAP_FILE=hashmap.c
 ARRAY_FILE=immutable_array.c
 STR_AUX_FILE=text_processing.c
 
-default: so-main clean_obj
+default: build
+
+build: so-main clean_obj
 
 so-main: hashmap.o array.o text_processing.o main.o
 	$(CC) $(CFLAGS) /Fe$(RESULT) $^
