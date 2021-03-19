@@ -4,7 +4,7 @@ RESULT = "so-cpp"
 
 MAIN_FILE = "PreProcess-Main.c"
 HASHMAP_FILE = "hashmap.c"
-ARRAY_FILE = "array.c"
+ARRAY_FILE = "immutable_array.c"
 STR_AUX_FILE = "text_processing.c"
 
 default: so-main clean_obj
@@ -16,13 +16,13 @@ main.o:
 	$(CC) -o $@ -c $(MAIN_FILE)
 
 hashmap.o:
-	$(CC) -c $(HASHMAP_FILE)
+	$(CC) -o $@ -c $(HASHMAP_FILE)
 
 array.o:
-	$(CC) -c $(ARRAY_FILE)
+	$(CC) -o $@ -c $(ARRAY_FILE)
 
 text_processing.o:
-	$(CC) -c $(STR_AUX_FILE)
+	$(CC) -o $@ -c $(STR_AUX_FILE)
 
 clean_obj:
 	rm *.o

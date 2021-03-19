@@ -1,4 +1,4 @@
-#include "array.h"
+#include "immutable_array.h"
 #include <stdlib.h>
 
 ////////////// ARRAY ALLOCATION //////////////

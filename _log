@@ -1,0 +1,62 @@
+==45473== Memcheck, a memory error detector
+==45473== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==45473== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==45473== Command: ./so-cpp _test/inputs/test37.in
+==45473== Parent PID: 45467
+==45473== 
+==45473== 
+==45473== Process terminating with default action of signal 2 (SIGINT)
+==45473==    at 0x401EF56: __open_nocancel (open64_nocancel.c:45)
+==45473==    by 0x40083BA: open_verify.constprop.0 (dl-load.c:1536)
+==45473==    by 0x4008C15: open_path (dl-load.c:1827)
+==45473==    by 0x400A7A2: _dl_map_object (dl-load.c:2067)
+==45473==    by 0x400F504: openaux (dl-deps.c:64)
+==45473==    by 0x401DCA9: _dl_catch_exception (dl-error-skeleton.c:208)
+==45473==    by 0x400F952: _dl_map_object_deps (dl-deps.c:248)
+==45473==    by 0x4004063: dl_main (rtld.c:1805)
+==45473==    by 0x401CC3A: _dl_sysdep_start (dl-sysdep.c:252)
+==45473==    by 0x400204B: _dl_start_final (rtld.c:449)
+==45473==    by 0x400204B: _dl_start (rtld.c:539)
+==45473==    by 0x4001107: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+==45473==    by 0x1: ???
+==45473== Jump to the invalid address stated on the next line
+==45473==    at 0x1030: ???
+==45473==    by 0x40083BA: open_verify.constprop.0 (dl-load.c:1536)
+==45473==    by 0x4008C15: open_path (dl-load.c:1827)
+==45473==    by 0x400A7A2: _dl_map_object (dl-load.c:2067)
+==45473==    by 0x400F504: openaux (dl-deps.c:64)
+==45473==    by 0x401DCA9: _dl_catch_exception (dl-error-skeleton.c:208)
+==45473==    by 0x400F952: _dl_map_object_deps (dl-deps.c:248)
+==45473==    by 0x4004063: dl_main (rtld.c:1805)
+==45473==    by 0x401CC3A: _dl_sysdep_start (dl-sysdep.c:252)
+==45473==    by 0x400204B: _dl_start_final (rtld.c:449)
+==45473==    by 0x400204B: _dl_start (rtld.c:539)
+==45473==    by 0x4001107: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+==45473==    by 0x1: ???
+==45473==  Address 0x1030 is not stack'd, malloc'd or (recently) free'd
+==45473== 
+==45473== 
+==45473== Process terminating with default action of signal 11 (SIGSEGV)
+==45473==  Bad permissions for mapped region at address 0x1030
+==45473==    at 0x1030: ???
+==45473==    by 0x40083BA: open_verify.constprop.0 (dl-load.c:1536)
+==45473==    by 0x4008C15: open_path (dl-load.c:1827)
+==45473==    by 0x400A7A2: _dl_map_object (dl-load.c:2067)
+==45473==    by 0x400F504: openaux (dl-deps.c:64)
+==45473==    by 0x401DCA9: _dl_catch_exception (dl-error-skeleton.c:208)
+==45473==    by 0x400F952: _dl_map_object_deps (dl-deps.c:248)
+==45473==    by 0x4004063: dl_main (rtld.c:1805)
+==45473==    by 0x401CC3A: _dl_sysdep_start (dl-sysdep.c:252)
+==45473==    by 0x400204B: _dl_start_final (rtld.c:449)
+==45473==    by 0x400204B: _dl_start (rtld.c:539)
+==45473==    by 0x4001107: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+==45473==    by 0x1: ???
+==45473== 
+==45473== HEAP SUMMARY:
+==45473==     in use at exit: 0 bytes in 0 blocks
+==45473==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==45473== 
+==45473== All heap blocks were freed -- no leaks are possible
+==45473== 
+==45473== For lists of detected and suppressed errors, rerun with: -s
+==45473== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

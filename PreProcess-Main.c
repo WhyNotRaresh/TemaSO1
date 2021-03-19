@@ -1,5 +1,5 @@
 #include "hashmap.h"
-#include "array.h"
+#include "immutable_array.h"
 #include "text_processing.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,7 +142,7 @@ void process(FILE* in, FILE* out) {
 
 				/* #define statement found */
 
-				statement = line + 8;
+				statement = strstr(line, DEF) + 8;
 				char* key = strtok(statement, " ");
 				char* data = strtok(NULL, "\n");					// remaining text in line
 				data = multiLineDefine(in, data, strlen(data));		// checks for defines on multiple lines
@@ -157,44 +157,42 @@ void process(FILE* in, FILE* out) {
 
 				/* #undef statement found */
 
-				statement += 7;
-				char* key = strtok(statement, "\n");
-				erase(key, def_mappings);
+				statement = strstr(line, UNDEF) + 7;
+				char* key = strtok(statement, "\n");				// extracts key
+				erase(key, def_mappings);							// removes item with maching from hashmap
 			} else if((statement = strstr(work_string, IFDEF)) != 0){
 
 				/* #ifdef statement found */
 
-				statement += 7;
+				statement = strstr(line, IFDEF) + 7;
+				char* key = strtok(statement, "\n");				// extracts key
+				A_Item it = search(key, def_mappings);				// searches for item in hashmap
 
-				char* key = strtok(statement, "\n");
-				A_Item it = search(key, def_mappings);
-
-				if (it == NULL) print = 0;
+				if (it == NULL) print = 0;							// sets program to not print anymore
 			} else if((statement = strstr(work_string, IFNDEF)) != 0){
 
 				/* #ifndef statement found */
 
-				statement += 8;
+				statement = strstr(line, IFNDEF) + 8;
+				char* key = strtok(statement, "\n");				// extracts key
+				A_Item it = search(key, def_mappings);				// searches for item in hashmap
 
-				char* key = strtok(statement, "\n");
-				A_Item it = search(key, def_mappings);
-
-				if (it == NULL) print = 1;
-				else  			print = 0;
+				if (it == NULL) print = 1;							// if key is present in hashmap, allows program to print to out file
+				else  			print = 0;							// if not, blocks program from writing to file
 			} else if ((statement = strstr(work_string, IF)) != 0) {
 
 				/* #if statement found */
 
-				statement += 4;
-				char* condition = computeString(strtok(statement, "\n"));
-				int eval_cond;
-				if (isNumber(condition) != -1) eval_cond = atoi(condition);
-				else 						   print = -1;
+				statement = strstr(line, IF) + 4;
+				char* condition = computeString(strtok(statement, "\n"));	// string value of condition
+				int eval_cond;												
+				if (isNumber(condition) != -1) eval_cond = atoi(condition);	// convet to int if the string is a number, otherwise:
+				else 						   print = -1;					// blocks printing AND blocks evaluating other statements
 
 				free(condition);
 
-				if (eval_cond != 0 && print == 0) print = 1; 
-				if (eval_cond == 0 && print == 1) print = 0;
+				if (eval_cond != 0 && print == 0) print = 1;		// enables printing to out file
+				if (eval_cond == 0 && print == 1) print = 0;		// desables printing to out file
 			} else if((statement = strstr(work_string, ELSE)) != 0) {
 
 				/* #else statement found */
@@ -206,24 +204,41 @@ void process(FILE* in, FILE* out) {
 				/* #elif statement found */
 
 				if (print == 0) {
-					statement += 6;
-					char* condition = computeString(strtok(statement, "\n"));
+					statement = strstr(line, ELIF) + 6;
+					char* condition = computeString(strtok(statement, "\n"));	// string value of condition
 					int eval_cond;
 
-					if (isNumber(condition) != -1) eval_cond = atoi(condition);
-					else 						   print = -1;
+					if (isNumber(condition) != -1) eval_cond = atoi(condition);	// convet to int if the string is a number, otherwise:
+					else 						   print = -1;					// blocks printing AND blocks evaluating other statements
 
 					free(condition);
 
-					if (eval_cond != 0 && print == 0) print = 1; 
-					if (eval_cond == 0 && print == 1) print = 0;
+					if (eval_cond != 0 && print == 0) print = 1; 	// enables printing to out file
+					if (eval_cond == 0 && print == 1) print = 0;	// desables printing to out file
 				}
 			}else if((statement = strstr(work_string, ENDIF)) != 0) {
 
 				/* #endif statement found */
 
 				print = 1;
-			} else {
+			} else if((statement = strstr(work_string, INC)) != 0) {
+
+				/* #include statement found */
+
+				if (print == 1) {
+					char* file = strtok(strstr(line, "\""), "\"");
+
+					FILE* include_file = fopen(file, "r");
+
+					if (include_file != NULL) {
+						process(include_file, out);
+						fclose(include_file);
+					} else {
+						return;
+					}
+					quotes_ptr = NULL;
+				}
+			}else {
 
 				/* No macro */
 

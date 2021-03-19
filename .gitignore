@@ -4,6 +4,6 @@ run*
 README
 Makefile.checker
 so-cpp
-_*
+*test*
 *in
 *out

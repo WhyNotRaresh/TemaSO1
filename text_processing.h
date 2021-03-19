@@ -1,5 +1,6 @@
 #pragma once
 #include "hashmap.h"
+#include "immutable_array.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -13,6 +14,7 @@
 #define ELSE	"#else"
 #define ELIF	"#elif"
 #define ENDIF	"#endif"
+#define INC 	"#include"
 
 HashMap def_mappings;
 
