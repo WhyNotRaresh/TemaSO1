@@ -12,6 +12,8 @@ void process(FILE*, FILE*);							// process input file
 
 int main(int argc, char* argv[]) {
 	def_mappings = allocHM();
+	dir_array	 = allocArray(100);
+	add("./_test/inputs/", &dir_array);
 	FILE *in = NULL, *out = NULL;
 
 	if (mapAllArgs(&in, &out, argc, argv) != -1) {
@@ -29,6 +31,7 @@ int main(int argc, char* argv[]) {
 	if (in != NULL)	fclose(in);
 	if (out != NULL) fclose(out);
 	deallocHM(def_mappings);
+	deallocArray(dir_array);
 	return 0;
 }
 
@@ -53,6 +56,9 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 
 		if (strcmp(argv[i], "-I") == 0) {
 			if (++i < argc) {
+				char* path = formatDirName(argv[i]);
+				add(path, &dir_array);
+				free(path);
 				continue;
 			} else {
 				return -1;
@@ -84,6 +90,9 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 		}
 
 		if (strcmp(beginning, "-I") == 0) {
+			char* path = formatDirName(new_arg);
+			add(path, &dir_array);
+			free(path);
 			continue;
 		}
 
@@ -228,7 +237,7 @@ void process(FILE* in, FILE* out) {
 				if (print == 1) {
 					char* file = strtok(strstr(line, "\""), "\"");
 
-					FILE* include_file = fopen(file, "r");
+					FILE* include_file = searchDirArray(file, dir_array);
 
 					if (include_file != NULL) {
 						process(include_file, out);

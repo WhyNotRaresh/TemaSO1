@@ -2,6 +2,22 @@
 #include <string.h>
 #include <ctype.h>
 
+char* formatDirName(const char* input_arg) {
+	char* path = NULL;
+	int input_len = strlen(input_arg);
+
+	if (input_arg[input_len - 1] == '/') {
+		path = (char*) calloc (input_len + 1, 1);
+		strncpy(path, input_arg, input_len);
+	} else {
+		path = (char*) calloc (input_len + 2, 1);
+		strncpy(path, input_arg, input_len);
+		path[input_len] = '/';
+	}
+
+	return path;
+}
+
 int canBeName(const char c) {
 	int ret = -1;
 	if (isalpha(c)) ret = 1;
@@ -173,4 +189,24 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 	definition[def_len] = '\0';
 
 	return definition;
+}
+
+FILE* searchDirArray(char* file, Array dir_array) {
+	FILE* out = fopen(file, "r");
+	if (out != NULL) return out;
+
+	int i = 0;
+	for (; i < dir_array.last; i++) {
+		const char* dir = get(i, dir_array);
+		char* path = (char*) calloc (strlen(dir) + strlen(file) + 2, 1);
+
+		strncpy(path, dir, strlen(dir));
+		strcat(path, file);
+
+		out = fopen(path, "r");
+		free(path);
+		if (out != NULL) return out;
+	}
+
+	return NULL;
 }

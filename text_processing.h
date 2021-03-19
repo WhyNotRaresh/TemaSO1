@@ -17,8 +17,11 @@
 #define INC 	"#include"
 
 HashMap def_mappings;
+Array 	dir_array;
 
+char* formatDirName(const char*);
 int canBeName(const char);							// checks if c can be part of variable name
 int isNumber(const char*);
 char* computeString(char*);							// computes new line for output
 char* multiLineDefine(FILE*, char*, int);			// checks for multi line #define
+FILE* searchDirArray(char*, Array);

@@ -27,15 +27,19 @@ void add(char* str, Array *arr) {
 
 	if (arr->last == arr->size) return;
 
-	arr->data[arr->last] = new_str;
-	(arr->last)++;
+	arr->data[(arr->last)++] = new_str;
 }
 
-int inArray(char* str, Array *arr) {
+const char* get(int index, Array arr) {
+	if (index > arr.last) return NULL;
+	return arr.data[index];
+}
+
+int inArray(char* str, Array arr) {
 	int i = 0;
-	for (; i < arr->last; i++) {
-		if (strncmp(arr->data[i], str, strlen(str)) == 0 &&
-				strlen(arr->data[i]) == strlen(str))
+	for (; i < arr.last; i++) {
+		if (strncmp(arr.data[i], str, strlen(str)) == 0 &&
+				strlen(arr.data[i]) == strlen(str))
 			return i;
 	}
 
