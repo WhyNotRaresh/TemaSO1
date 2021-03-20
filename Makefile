@@ -8,11 +8,9 @@ HASHMAP_FILE=hashmap.c
 ARRAY_FILE=immutable_array.c
 STR_AUX_FILE=text_processing.c
 
-default: build
+default: build clean_obj
 
-build: so-main
-
-so-main: hashmap.obj array.obj text_processing.obj main.obj
+build: hashmap.obj array.obj text_processing.obj main.obj
 	$(LINK) /out:$(RESULT) hashmap.obj array.obj text_processing.obj main.obj
 
 main.obj:

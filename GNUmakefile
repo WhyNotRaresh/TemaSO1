@@ -7,11 +7,9 @@ HASHMAP_FILE = "hashmap.c"
 ARRAY_FILE = "immutable_array.c"
 STR_AUX_FILE = "text_processing.c"
 
-build: so-main
+default: build clean_obj
 
-default: so-main
-
-so-main: hashmap.o array.o text_processing.o main.o
+build: hashmap.o array.o text_processing.o main.o
 	$(CC) $(CFLAGS) -o $(RESULT) $^
 
 main.o:
