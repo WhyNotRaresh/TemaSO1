@@ -186,26 +186,25 @@ char* computeString(char* line) {
 
 char* multiLineDefine(FILE* in, char* data, int def_len) {
 	char* backslash, *definition;
-	int i;
 	definition = (char*) calloc (def_len + 1, 1);
 	strncpy(definition, data, def_len);
-
-	char* new_line = NULL;
-	int line_len = 0;
-	int read = 0;
 
 
 	if (data[strlen(data) - 1] == '\\') {
 
 		/* Multi Line Define */
 
-		while ((read = readLine(in, &new_line)) != -1) {
+		char* new_line;
+		int i;
+		while (readLine(in, &new_line) != -1) {
+			int line_len;
+			char* token, new_def;
 			line_len = strlen(new_line);
-			char* token = strtok(new_line, "\n");	// new line of the definition
+			token = strtok(new_line, "\n");		// new line of the definition
 
 			/* Alloc'ing new space for new definiton */
 
-			char* new_def = (char*) calloc(def_len + strlen(token) + 1, 1);
+			new_def = (char*) calloc(def_len + strlen(token) + 1, 1);
 
 			strncpy(new_def, definition, def_len);
 			strncpy(new_def + def_len, token, strlen(token));
