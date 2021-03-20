@@ -254,6 +254,7 @@ void process(FILE* in, FILE* out) {
 						process(include_file, out);
 						fclose(include_file);
 					} else {
+						fprintf(stderr, "12");
 						return;
 					}
 					quotes_ptr = NULL;

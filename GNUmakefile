@@ -7,6 +7,8 @@ HASHMAP_FILE = "hashmap.c"
 ARRAY_FILE = "immutable_array.c"
 STR_AUX_FILE = "text_processing.c"
 
+build: so-main
+
 default: so-main clean_obj
 
 so-main: hashmap.o array.o text_processing.o main.o
@@ -28,4 +30,4 @@ clean_obj:
 	rm *.o
 
 clean:
-	rm $(RESULT)
+	rm $(RESULT) *.o

@@ -53,15 +53,16 @@ A_Item search(const char* key, HashMap map) {
 
 void insert(char* key, char* data, HashMap map) {
 	A_Item item = allocItem(key, data);
-	if (item == NULL) return;
+	if (item != NULL) {
 
-	int index = hash(key);
+		int index = hash(key);
 
-	while (map[index] != NULL) {
-		index = ++index % HASHMAP_SIZE;
+		while (map[index] != NULL) {
+			index = ++index % HASHMAP_SIZE;
+		}
+
+		map[index] = item;
 	}
-
-	map[index] = item;
 }
 
 void erase(char* key, HashMap map) {
