@@ -117,11 +117,11 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 }
 
 void process(FILE* in, FILE* out) {
-	char* line = NULL;
+	char* line;
 	int read = 0;
-	size_t len = 0;
+	int len = 0;
 
-	while ((read = getline(&line, &len, in)) != -1) {
+	while ((read = readLine(in, &len, &line)) != -1) {
 		int quotes = -1;
 		char* quotes_ptr = line;
 
@@ -149,6 +149,7 @@ void process(FILE* in, FILE* out) {
 				if (print == 1) {
 					fprintf(out, "%s", work_string);
 				}
+
 				free(work_string);
 				continue;
 			}
@@ -285,7 +286,8 @@ void process(FILE* in, FILE* out) {
 
 			free(work_string);
 		} while(quotes_ptr != NULL);
-	}
 
+		free(line);
+	}
 	free(line);
 }

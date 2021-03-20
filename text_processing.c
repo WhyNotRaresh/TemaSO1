@@ -4,6 +4,29 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+int readLine(FILE* in, int* len, char** str) {
+	int i = 0;
+	char c;
+	*len = 30;
+	*str = (char*) calloc (*len, 1);
+
+	do {
+		if (fscanf(in, "%c", &c) == EOF) return -1;
+
+		(*str)[i++] = c;
+
+		if (i == *len) {
+			*len = (*len) * 2;
+			*str = realloc(*str, *len);
+		}
+	} while(c != '\n');
+
+	*len = strlen(*str);
+	*str = realloc(*str, *len + 1);
+
+	return 1;
+}
+
 char* formatDirName(const char* input_arg) {
 	char* path = NULL;
 	int input_len = strlen(input_arg);
@@ -172,11 +195,11 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 		/* Multi Line Define */
 
 		char* new_line = NULL;
-		size_t line_len = 0;
-		size_t read = 0;
+		int line_len = 0;
+		int read = 0;
 
-		while ((read = getline(&new_line, &line_len, in)) != -1) {
-			char* token = strtok(new_line, "\n");	// newt line of the definition
+		while ((read = readLine(in, &line_len, &new_line)) != -1) {
+			char* token = strtok(new_line, "\n");	// new line of the definition
 
 			/* Alloc'ing new space for new definiton */
 
@@ -193,6 +216,8 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 			backslash = NULL;
 			if ((backslash = strstr(new_line, "\\")) == 0) {
 				break;
+			} else {
+				free(new_line);
 			}
 		}
 

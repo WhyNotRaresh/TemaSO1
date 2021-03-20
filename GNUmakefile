@@ -7,7 +7,7 @@ HASHMAP_FILE = "hashmap.c"
 ARRAY_FILE = "immutable_array.c"
 STR_AUX_FILE = "text_processing.c"
 
-build: so-main
+#build: so-main
 
 default: so-main clean_obj
 

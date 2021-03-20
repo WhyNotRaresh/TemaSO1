@@ -19,6 +19,7 @@
 HashMap def_mappings;
 Array 	dir_array;
 
+int readLine(FILE*, int*, char**);
 char* formatDirName(const char*);
 char* formatDefine(const char*);
 int canBeName(const char);							// checks if c can be part of variable name
