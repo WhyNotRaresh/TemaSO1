@@ -9,7 +9,7 @@ STR_AUX_FILE = "text_processing.c"
 
 build: so-main
 
-default: so-main clean_obj
+default: so-main
 
 so-main: hashmap.o array.o text_processing.o main.o
 	$(CC) $(CFLAGS) -o $(RESULT) $^
