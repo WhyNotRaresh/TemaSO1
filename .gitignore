@@ -1,7 +1,6 @@
 hooks.*
 libso.so
 run*
-README
 Makefile.checker
 so-cpp
 *test*
