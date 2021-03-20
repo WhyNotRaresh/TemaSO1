@@ -1,5 +1,7 @@
 #include "text_processing.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 char* formatDirName(const char* input_arg) {
@@ -61,6 +63,8 @@ char* computeString(char* line) {
 	int new_line_len = strlen(line);							// alloc'd size of new line
 	char* new_line = (char*) calloc (new_line_len + 1, 1);		// computet string of input
 	char* new_line_ptr = new_line;								// pointer to last unwritten chr in new line
+	A_Item it;
+	char* result;
 
 	int i = 0;
 	for (; i <= line_len; i++) {
@@ -114,7 +118,7 @@ char* computeString(char* line) {
 
 				/* Searching Define map */
 
-				A_Item it = search(word, def_mappings);
+				it = search(word, def_mappings);
 				if (it != NULL) {
 					int data_len = strlen(it->data);
 
@@ -149,7 +153,7 @@ char* computeString(char* line) {
 
 	/* Truncating result to exact size */
 
-	char* result = (char*) calloc (new_line_ptr - new_line + 1, 1);
+	result = (char*) calloc (new_line_ptr - new_line + 1, 1);
 	strncpy(result, new_line, new_line_ptr - new_line);
 	free(new_line);
 
@@ -157,8 +161,11 @@ char* computeString(char* line) {
 }
 
 char* multiLineDefine(FILE* in, char* data, int def_len) {
-	char* definition = (char*) calloc (def_len + 1, 1);
+	char* backslash, *definition;
+	int i;
+	definition = (char*) calloc (def_len + 1, 1);
 	strncpy(definition, data, def_len);
+
 
 	if (data[strlen(data) - 1] == '\\') {
 
@@ -183,7 +190,7 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 			definition = new_def;
 
 			// Exit condition
-			char* backslash = NULL;
+			backslash = NULL;
 			if ((backslash = strstr(new_line, "\\")) == 0) {
 				break;
 			}
@@ -193,8 +200,7 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 
 		/* Replacing specific chrs from definition */
 		
-		int i = 0;
-		for (; i < def_len; i++) {
+		for (i = 0; i < def_len; i++) {
 			if (definition[i] == '\t' ||
 				definition[i] == '\\')
 				definition[i] = ' ';
@@ -208,10 +214,10 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 }
 
 FILE* searchDirArray(char* file, Array dir_array) {
+	int i = 0;
 	FILE* out = fopen(file, "r");
 	if (out != NULL) return out;
 
-	int i = 0;
 	for (; i < dir_array.last; i++) {
 		const char* dir = get(i, dir_array);
 		char* path = (char*) calloc (strlen(dir) + strlen(file) + 2, 1);

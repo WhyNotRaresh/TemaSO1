@@ -22,8 +22,8 @@ void deallocItem(A_Item item) {
 
 ////////////// HASHMAP ALLOCATION //////////////
 
-HashMap allocHM() {
-	HashMap map = (HashMap) calloc (HASHMAP_SIZE, sizeof(A_Item));
+HashMap allocHM(int size) {
+	HashMap map = (HashMap) calloc (size, sizeof(A_Item));
 	return map;
 }
 

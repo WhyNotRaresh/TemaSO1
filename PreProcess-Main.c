@@ -11,10 +11,10 @@ int mapAllArgs(FILE**, FILE**, int, char**);		// map all arguments
 void process(FILE*, FILE*);							// process input file
 
 int main(int argc, char* argv[]) {
-	def_mappings = allocHM();
+	FILE *in = NULL, *out = NULL;
+	def_mappings = allocHM(HASHMAP_SIZE);
 	dir_array	 = allocArray(10);
 	add("./_test/inputs/", &dir_array);
-	FILE *in = NULL, *out = NULL;
 
 	if (mapAllArgs(&in, &out, argc, argv) != -1) {
 		if (in == NULL) {
@@ -38,16 +38,19 @@ int main(int argc, char* argv[]) {
 int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 	int i = 1;
 	for (; i < argc; i++) {
+		char beginning[2];
+		char* new_arg;
 
 		/* Searching for spaced arguments */
 
 		if (strcmp(argv[i], "-D") == 0) {
 			if (++i < argc) {
-				char* data = strstr(argv[i], "=");
+				char *data, *key, *definition;
+				data = strstr(argv[i], "=");
 				if (data == 0) data = "";
 				else 		   data += 1;
-				char* key = strtok(argv[i], "=");
-				char* definition = formatDefine(data);
+				key = strtok(argv[i], "=");
+				definition = formatDefine(data);
 				insert(key, definition, def_mappings);
 				free(definition);
 				continue;
@@ -78,16 +81,16 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 
 		/* Searching for glued arguments */
 
-		char beginning[2];
 		strncpy(beginning, argv[i], 2);
-		char* new_arg = argv[i] + 2;
+		new_arg = argv[i] + 2;
 
 		if (strcmp(beginning, "-D") == 0) {
-			char* data = strstr(argv[i], "=");
+			char *data, *key, *definition;
+			data = strstr(argv[i], "=");
 			if (data == 0) data = "";
 			else 		   data += 1;
-			char* key = strtok(new_arg, "=");
-			char* definition = formatDefine(data);
+			key = strtok(new_arg, "=");
+			definition = formatDefine(data);
 			insert(key, definition, def_mappings);
 			free(definition);
 			continue;
@@ -124,8 +127,10 @@ void process(FILE* in, FILE* out) {
 
 		do {
 			char* work_string = NULL;						// string to pe processed
+			char* next_quotes = NULL;						// pointer to next set of quotes
+			char* statement = NULL;
 			quotes++;										// number of quotes found in line increased
-			char* next_quotes = strstr(quotes_ptr, "\"");	// getting next quote in line
+			next_quotes = strstr(quotes_ptr, "\"");			// getting next quote in line
 
 			if (next_quotes != 0) {
 				work_string = (char*) calloc(next_quotes - quotes_ptr + 2, 1);
@@ -150,16 +155,16 @@ void process(FILE* in, FILE* out) {
 
 			/* Working outside of quotes => process sting */
 
-			char* statement = NULL;
+			statement = NULL;
 			if ((statement = strstr(work_string, DEF)) != 0) {
 
 				/* #define statement found */
 
+				char *key, *data, *definition;
 				statement = strstr(line, DEF) + 8;
-				char* key = strtok(statement, " ");
-				char* data = strtok(NULL, "\n");					// remaining text in line
-				char* definition;
-
+				key = strtok(statement, " ");
+				data = strtok(NULL, "\n");							// remaining text in line
+				
 				if (data != NULL) {
 					data = multiLineDefine(in, data, strlen(data));	// checks for defines on multiple lines
 					definition = computeString(data);				// replaces strings already defined in hashmap
@@ -177,25 +182,30 @@ void process(FILE* in, FILE* out) {
 
 				/* #undef statement found */
 
+				char* key;
 				statement = strstr(line, UNDEF) + 7;
-				char* key = strtok(statement, "\n");				// extracts key
+				key = strtok(statement, "\n");						// extracts key
 				erase(key, def_mappings);							// removes item with maching from hashmap
 			} else if((statement = strstr(work_string, IFDEF)) != 0){
 
 				/* #ifdef statement found */
 
+				char* key;
+				A_Item it;
 				statement = strstr(line, IFDEF) + 7;
-				char* key = strtok(statement, "\n");				// extracts key
-				A_Item it = search(key, def_mappings);				// searches for item in hashmap
+				key = strtok(statement, "\n");						// extracts key
+				it = search(key, def_mappings);						// searches for item in hashmap
 
 				if (it == NULL) print = 0;							// sets program to not print anymore
 			} else if((statement = strstr(work_string, IFNDEF)) != 0){
 
 				/* #ifndef statement found */
 
+				char* key;
+				A_Item it;
 				statement = strstr(line, IFNDEF) + 8;
-				char* key = strtok(statement, "\n");				// extracts key
-				A_Item it = search(key, def_mappings);				// searches for item in hashmap
+				key = strtok(statement, "\n");						// extracts key
+				it = search(key, def_mappings);						// searches for item in hashmap
 
 				if (it == NULL) print = 1;							// if key is present in hashmap, allows program to print to out file
 				else  			print = 0;							// if not, blocks program from writing to file
@@ -203,9 +213,10 @@ void process(FILE* in, FILE* out) {
 
 				/* #if statement found */
 
+				char *condition;
+				int eval_cond;
 				statement = strstr(line, IF) + 4;
-				char* condition = computeString(strtok(statement, "\n"));	// string value of condition
-				int eval_cond;												
+				condition = computeString(strtok(statement, "\n"));	// string value of condition									
 				if (isNumber(condition) != -1) eval_cond = atoi(condition);	// convet to int if the string is a number, otherwise:
 				else 						   print = -1;					// blocks printing AND blocks evaluating other statements
 
@@ -224,9 +235,11 @@ void process(FILE* in, FILE* out) {
 				/* #elif statement found */
 
 				if (print == 0) {
-					statement = strstr(line, ELIF) + 6;
-					char* condition = computeString(strtok(statement, "\n"));	// string value of condition
+					char *condition;
 					int eval_cond;
+					statement = strstr(line, ELIF) + 6;
+					condition = computeString(strtok(statement, "\n"));			// string value of condition
+					eval_cond;
 
 					if (isNumber(condition) != -1) eval_cond = atoi(condition);	// convet to int if the string is a number, otherwise:
 					else 						   print = -1;					// blocks printing AND blocks evaluating other statements

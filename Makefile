@@ -1,7 +1,7 @@
 CC=cl
 LINK=link
-CFLAGS="/MD /Wall"
-RESULT=so-cpp
+CFLAGS=/MD /Wall
+RESULT=so-cpp.exe
 
 MAIN_FILE=PreProcess-Main.c
 HASHMAP_FILE=hashmap.c
@@ -10,26 +10,26 @@ STR_AUX_FILE=text_processing.c
 
 default: build
 
-build: so-main clean_obj
+build: so-main
 
 so-main: hashmap.obj array.obj text_processing.obj main.obj
-	$(LINK) $(CFLAGS) /Fe$(RESULT) hashmap.obj array.obj text_processing.obj main.obj
+	$(LINK) /out:$(RESULT) hashmap.obj array.obj text_processing.obj main.obj
 
 main.obj:
-	$(CC) /Fomain.obj /c $(MAIN_FILE)
+	$(CC) $(CFLAGS) /Fomain.obj /c $(MAIN_FILE)
 
 hashmap.obj:
-	$(CC) /Fohashmap.obj /c $(HASHMAP_FILE)
+	$(CC) $(CFLAGS) /Fohashmap.obj /c $(HASHMAP_FILE)
 
 array.obj:
-	$(CC) /Foarray.obj /c $(ARRAY_FILE)
+	$(CC) $(CFLAGS) /Foarray.obj /c $(ARRAY_FILE)
 
 text_processing.obj:
-	$(CC) /Fotext_processing.obj /c $(STR_AUX_FILE)
+	$(CC) $(CFLAGS) /Fotext_processing.obj /c $(STR_AUX_FILE)
 
 
 clean_obj:
-	rm *.o
+	del *.obj
 
 clean:
-	rm $(RESULT)
+	del $(RESULT)

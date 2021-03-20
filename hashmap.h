@@ -12,7 +12,7 @@ typedef struct {
 A_Item allocItem(char*, char*);
 void deallocItem(A_Item);
 
-HashMap allocHM();				// Allocate HashMap
+HashMap allocHM(int);			// Allocate HashMap
 void deallocHM(HashMap);		// Deallocate HashMap
 
 int hash(const char*);						// Hash function for strings
