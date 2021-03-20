@@ -185,7 +185,7 @@ char* computeString(char* line) {
 }
 
 char* multiLineDefine(FILE* in, char* data, int def_len) {
-	char* backslash, *definition;
+	char *backslash, *definition;
 	definition = (char*) calloc (def_len + 1, 1);
 	strncpy(definition, data, def_len);
 
@@ -198,7 +198,7 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 		int i;
 		while (readLine(in, &new_line) != -1) {
 			int line_len;
-			char* token, new_def;
+			char *token, *new_def;
 			line_len = strlen(new_line);
 			token = strtok(new_line, "\n");		// new line of the definition
 
