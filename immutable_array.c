@@ -4,28 +4,29 @@
 ////////////// ARRAY ALLOCATION //////////////
 
 Array allocArray(int size) {
-	Array array;
-	array.size = size;
-	array.data = (char**) calloc(size, sizeof(char*));
-	array.last = 0;
+	Array arr;
 
-	return array;
+	arr.size = size;
+	arr.data = (char **) calloc(size, sizeof(char*));
+	arr.last = (int) 0;
+
+	return arr;
 }
 
 void deallocArray(Array array) {
-	for (; array.last >= 0; array.last--) {
+	for (; array.last >= 0; array.last--)
 		free(array.data[array.last]);
-	}
 	free(array.data);
 }
 
 ////////////// ARRAY FUNCTIONS //////////////
 
 void add(char* str, Array *arr) {
-	char* new_str = calloc (strlen(str) + 1, 1);
+	char* new_str = calloc(strlen(str) + 1, 1);
 	strncpy(new_str, str, strlen(str));
 
-	if (arr->last == arr->size) return;
+	if (arr->last == arr->size)
+		return;
 
 	arr->data[(arr->last)++] = new_str;
 }

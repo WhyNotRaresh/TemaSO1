@@ -6,20 +6,20 @@
 
 /* macro words */
 
-#define DEF 	"#define"
-#define UNDEF 	"#undef"
-#define IF 		"#if"
+#define DEF		"#define"
+#define UNDEF	"#undef"
+#define IF		"#if"
 #define IFDEF	"#ifdef"
 #define IFNDEF	"#ifndef"
 #define ELSE	"#else"
 #define ELIF	"#elif"
 #define ENDIF	"#endif"
-#define INC 	"#include"
+#define INC		"#include"
 
 HashMap def_mappings;
 Array 	dir_array;
 
-int readLine(FILE*, int*, char**);
+int readLine(FILE*, char**);
 char* formatDirName(const char*);
 char* formatDefine(const char*);
 int canBeName(const char);							// checks if c can be part of variable name

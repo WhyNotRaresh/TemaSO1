@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
 		print = 1;
 		process(in, out);
 	}
-	
 
 	if (in != NULL)	fclose(in);
 	if (out != NULL) fclose(out);
@@ -119,9 +118,8 @@ int mapAllArgs(FILE** in, FILE** out, int argc, char* argv[]) {
 void process(FILE* in, FILE* out) {
 	char* line;
 	int read = 0;
-	int len = 0;
 
-	while ((read = readLine(in, &len, &line)) != -1) {
+	while ((read = readLine(in, &line)) != -1) {
 		int quotes = -1;
 		char* quotes_ptr = line;
 
@@ -217,7 +215,7 @@ void process(FILE* in, FILE* out) {
 				char *condition;
 				int eval_cond;
 				statement = strstr(line, IF) + 4;
-				condition = computeString(strtok(statement, "\n"));	// string value of condition									
+				condition = computeString(strtok(statement, "\n"));			// string value of condition									
 				if (isNumber(condition) != -1) eval_cond = atoi(condition);	// convet to int if the string is a number, otherwise:
 				else 						   print = -1;					// blocks printing AND blocks evaluating other statements
 
@@ -254,15 +252,15 @@ void process(FILE* in, FILE* out) {
 
 				/* #endif statement found */
 
-				print = 1;
+				print = 1;											// enables printing to out file
 			} else if((statement = strstr(work_string, INC)) != 0) {
 
 				/* #include statement found */
 
 				if (print == 1) {
-					char* file = strtok(strstr(line, "\""), "\"");
+					char* file = strtok(strstr(line, "\""), "\"");				// getting file name
 
-					FILE* include_file = searchDirArray(file, dir_array);
+					FILE* include_file = searchDirArray(file, dir_array);		// openning file
 
 					if (include_file != NULL) {
 						process(include_file, out);

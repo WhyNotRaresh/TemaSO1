@@ -4,25 +4,26 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-int readLine(FILE* in, int* len, char** str) {
+int readLine(FILE* in, char** str) {
 	int i = 0;
 	char c;
-	*len = 30;
-	*str = (char*) calloc (*len, 1);
+	int len = 30;
+	*str = (char*) calloc (len, 1);
 
 	do {
 		if (fscanf(in, "%c", &c) == EOF) return -1;
 
 		(*str)[i++] = c;
 
-		if (i == *len) {
-			*len = (*len) * 2;
-			*str = realloc(*str, *len);
+		if (i == len - 1) {
+			len = len * 2;
+			*str = realloc(*str, len);
 		}
 	} while(c != '\n');
 
-	*len = strlen(*str);
-	*str = realloc(*str, *len + 1);
+	len = i;
+	*str = realloc(*str, len + 1);
+	(*str)[len] = '\0';
 
 	return 1;
 }
@@ -189,16 +190,17 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 	definition = (char*) calloc (def_len + 1, 1);
 	strncpy(definition, data, def_len);
 
+	char* new_line = NULL;
+	int line_len = 0;
+	int read = 0;
+
 
 	if (data[strlen(data) - 1] == '\\') {
 
 		/* Multi Line Define */
 
-		char* new_line = NULL;
-		int line_len = 0;
-		int read = 0;
-
-		while ((read = readLine(in, &line_len, &new_line)) != -1) {
+		while ((read = readLine(in, &new_line)) != -1) {
+			line_len = strlen(new_line);
 			char* token = strtok(new_line, "\n");	// new line of the definition
 
 			/* Alloc'ing new space for new definiton */
@@ -216,9 +218,8 @@ char* multiLineDefine(FILE* in, char* data, int def_len) {
 			backslash = NULL;
 			if ((backslash = strstr(new_line, "\\")) == 0) {
 				break;
-			} else {
-				free(new_line);
 			}
+			free(new_line);
 		}
 
 		free(new_line);
