@@ -1,1 +1,37 @@
 Badita Rares 333CB
+
+Implementarea Teme1 la Sisteme de Operare.
+
+Structuri de date folosite:
+Hashmap:
+  O folosesc pentru a stoca variabilele definite prin secventa "#define" sau prin -D la rulare
+  Tipul de date pentru un obiect din hashmap este in fisieru hashmap.h si contine doua stringuri, unul pentru cheie si unul pentru date.
+  "Key" in cazul acesta este numele variabilei, iar "data" reprezinta valoare propriuzisa a acesteia.
+  
+Immutable array:
+  O folosesc pentru a salva toate directoarele in care trebuie sa caut fisiere.
+  
+Inceput:
+  Se parcurg argumentele date la rularea (functia mapAllArgs) si se stabilesc:
+    - variabilele declarate;
+    - directoarele de verificat;
+    - fisierul de input;
+    - fisierul de outpt.
+  Daca outputul este inca NULL, atunci acesta devine stdout.
+  
+Mod de Procesare al inputului:
+  Se citeste din fisierul de input linie cu linie.
+  Fiecare linie este impartita in stringuri separate folosind ca delimitator ghilimelele.
+  
+  Pentru fiecare caractre '\"' intalnit in linie se creste un contor. Daca contorul este impar inseamna ca suntem intre ghilimele,
+  deci textul este printat direct la iesire, fara a fi procesat in vreun fel.
+  Daca contorul este par, se ferifica pentru fiecare dintre macro din enunt (#define; #if; #else etc);
+  Toate operatiile pentru fiecare macro sunt definite in functia process.
+  
+  Pentru a stii daca linia trebuie scrisa in fisierul de output, am variabila print, care are urmatoarele valori posibile:
+    0 = Nu printa in fisierul de out textul actual;
+    1 = printeaza la out linia actuala;
+    -1 = nu evalua linia actuala (nu cauta nici macrouri in aceasta linie).
+    
+  Functia ce inlocuiest in mod practic o variabila definita este computeString din text_processing.c.
+  Functia primeste un string si intoarece altul in care toate variabilele deja definite au fost inlocuite cu valorile din hashmap.
